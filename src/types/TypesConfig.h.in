@@ -1,0 +1,2 @@
+#cmakedefine QUICKSTEP_COMPILER_MSVC
+#cmakedefine QUICKSTEP_HAVE_STRNLEN

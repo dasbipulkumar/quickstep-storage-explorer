@@ -1,0 +1,32 @@
+Quickstep is a research project at the University of Wisconsin-Madison.
+
+The Quickstep Authors are:
+
+Project Director:  Jignesh M. Patel (jignesh@cs.wisc.edu)
+Lead Developer:    Craig Chasseur (chasseur@cs.wisc.edu)
+Developers:        Yinan Li (yinan@cs.wisc.edu)
+                   Harshad Deshmukh (harshad@cs.wisc.edu)
+                   Qiang Zeng (qzeng@cs.wisc.edu)
+
+
+Quickstep uses third-party open source software, which is bundled in the
+third_party directory, specifically:
+
+cJSON - An ultra-lightweight JSON parser in ANSI C. Copyright (c) 2009 by
+Dave Gamble. Released under the MIT license.
+http://cjson.sourceforge.net/
+
+Intel PCM - A library for accessing hardware performance counters on Intel
+CPUs. Copyright (c) 2009-2012 by Intel Corporation. Released under the BSD
+license.
+http://software.intel.com/en-us/articles/intel-performance-counter-monitor-a-better-way-to-measure-cpu-utilization
+
+Protocol Buffers - An efficient and extensible data interchange format.
+Copyright (c) 2008 by Google Inc. Released under the BSD license.
+https://code.google.com/p/protobuf/
+
+gperftools - Google performance tools, specifically tcmalloc, a very fast
+thread-aware malloc replacement. Copyright (c) 2005 by Google Inc. Released
+under the BSD license.
+https://code.google.com/p/gperftools/
+
