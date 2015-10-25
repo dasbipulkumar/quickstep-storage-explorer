@@ -117,6 +117,7 @@ class ExperimentConfiguration {
   bool use_compression_;
   bool use_index_;
   int index_column_;
+  bool use_bloom_filter_;
 
   std::size_t num_runs_;
   bool measure_cache_misses_;

@@ -75,11 +75,22 @@ message CSBTreeIndexSubBlockDescription {
 }
 
 
+// Options for BloomFilterSubBlocks.
+message BloomFilterSubBlockDescription {
+  enum BloomFilterSubBlockType {
+    DEFAULT = 0;
+  }
+  
+  required BloomFilterSubBlockType sub_block_type = 1;
+}
+
+
 // A complete logical description of a layout.
 message StorageBlockLayoutDescription {
   required uint64 num_slots = 1;
   required TupleStorageSubBlockDescription tuple_store_description = 2;
   repeated IndexSubBlockDescription index_description = 3;
+  optional BloomFilterSubBlockDescription bloom_filter_description = 4;
 }
 
 // A binary-format header for an individual StorageBlock. The memory-layout of

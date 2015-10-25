@@ -176,7 +176,8 @@ StorageBlockLayout* DataGenerator::generateColumnstoreLayout(
 StorageBlockLayout* DataGenerator::generateRowstoreLayout(
     const CatalogRelation &relation,
     const std::size_t num_slots,
-    const std::vector<attribute_id> &index_on_columns) const {
+    const std::vector<attribute_id> &index_on_columns,
+	const bool use_bloom_filter) const {
   ScopedPtr<StorageBlockLayout> layout(new StorageBlockLayout(relation));
   StorageBlockLayoutDescription *layout_desc = layout->getDescriptionMutable();
 
@@ -192,6 +193,8 @@ StorageBlockLayout* DataGenerator::generateRowstoreLayout(
     index_desc->set_sub_block_type(IndexSubBlockDescription::CSB_TREE);
     index_desc->AddExtension(CSBTreeIndexSubBlockDescription::indexed_attribute_id, *it);
   }
+
+
 
   layout->finalize();
   return layout.release();

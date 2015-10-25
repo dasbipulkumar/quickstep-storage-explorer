@@ -138,7 +138,8 @@ class DataGenerator {
   StorageBlockLayout* generateRowstoreLayout(
       const CatalogRelation &relation,
       const std::size_t num_slots,
-      const std::vector<attribute_id> &index_on_columns) const;
+      const std::vector<attribute_id> &index_on_columns,
+	  const bool use_bloom_filter) const;
 
   /**
    * @brief Generate a compressed column-store layout, optionally with indices.

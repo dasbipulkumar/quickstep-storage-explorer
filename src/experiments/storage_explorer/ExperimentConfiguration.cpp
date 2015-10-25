@@ -149,6 +149,21 @@ ExperimentConfiguration* ExperimentConfiguration::LoadFromJSON(cJSON *json) {
     configuration->use_compression_ = false;
   }
 
+  cJSON *json_use_bloom_filter = cJSON_GetObjectItem(json, "use_bloom_filter");
+  if (json_use_bloom_filter == NULL) {	// enable bloom filters by default
+    configuration->use_bloom_filter_ = true;
+  }
+  if ((json_use_bloom_filter->type != cJSON_False)
+      && (json_use_bloom_filter->type != cJSON_True)) {
+    FATAL_ERROR("\"use_bloom_filter\" is not a boolean in experiment configuration.");
+  }
+  if (json_use_bloom_filter->type == cJSON_True) {
+    configuration->use_bloom_filter_ = true;
+  } else {
+    configuration->use_bloom_filter_ = false;
+  }
+
+
   cJSON *json_index_column = cJSON_GetObjectItem(json, "index_column");
   if (json_index_column == NULL) {
     configuration->use_index_ = false;
@@ -312,6 +327,11 @@ void ExperimentConfiguration::logConfiguration(std::ostream *output) const {
     *output << "    Compression Enabled\n";
   } else {
     *output << "    Compression Not Enabled\n";
+  }
+  if (use_bloom_filter_) {
+	*output << "    Compression Enabled\n";
+  } else {
+	*output << "    Compression Not Enabled\n";
   }
 
   *output << "Test Parameters:\n";

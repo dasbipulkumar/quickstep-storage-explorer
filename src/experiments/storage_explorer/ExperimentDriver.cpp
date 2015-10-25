@@ -153,7 +153,8 @@ void BlockBasedExperimentDriver::generateData() {
       layout.reset(data_generator_->generateRowstoreLayout(
           *relation_,
           static_cast<const BlockBasedExperimentConfiguration&>(configuration_).block_size_slots_,
-          index_columns));
+          index_columns,
+		  configuration_.use_bloom_filter_));
     }
   }
 
