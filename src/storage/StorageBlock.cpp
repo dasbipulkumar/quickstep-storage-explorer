@@ -160,6 +160,10 @@ StorageBlock::StorageBlock(const CatalogRelation &relation,
       all_indices_consistent_ = false;
     }
   }
+
+  if (block_header_.layout().bloom_filter_description().IsInitialized()) {
+	 // create a bloom filter, if "use_bloom_filter" was set to true
+  }
 }
 
 bool StorageBlock::insertTuple(const Tuple &tuple, const AllowedTypeConversion atc) {

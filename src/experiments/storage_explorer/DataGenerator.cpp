@@ -194,7 +194,10 @@ StorageBlockLayout* DataGenerator::generateRowstoreLayout(
     index_desc->AddExtension(CSBTreeIndexSubBlockDescription::indexed_attribute_id, *it);
   }
 
-
+  if (use_bloom_filter) {
+	  layout_desc->mutable_bloom_filter_description()
+			  ->set_sub_block_type(BloomFilterSubBlockDescription::DEFAULT);
+  }
 
   layout->finalize();
   return layout.release();
