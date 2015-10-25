@@ -330,7 +330,7 @@ Predicate* NumericDataGenerator::generatePredicate(const CatalogRelation &relati
   ScalarAttribute *scalar_attribute = new ScalarAttribute(relation.getAttributeById(select_column));
   ScalarLiteral *scalar_literal
       = new ScalarLiteral(IntType::InstanceNonNullable().makeLiteralTypeInstance(threshold_value));
-  return new ComparisonPredicate(Comparison::GetComparison(Comparison::kGreaterOrEqual),
+  return new ComparisonPredicate(Comparison::GetComparison(Comparison::kEqual),
                                  scalar_attribute,
                                  scalar_literal);
 }
