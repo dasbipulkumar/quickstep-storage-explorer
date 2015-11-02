@@ -75,6 +75,10 @@ enum IndexSubBlockType {
  **/
 extern const char *kIndexSubBlockTypeNames[];
 
+enum BloomFilterSubBlockType {
+	kDefault = 0
+};
+
 /** @} */
 
 }  // namespace quickstep

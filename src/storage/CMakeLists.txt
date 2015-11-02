@@ -36,8 +36,8 @@ QS_PROTOBUF_GENERATE_CPP(storage_proto_srcs storage_proto_hdrs StorageBlockLayou
 add_custom_target(storage_proto DEPENDS ${storage_proto_hdrs})
 
 add_library(storage
-            BasicColumnStoreTupleStorageSubBlock.cpp ColumnStoreUtil.cpp
-            CompressedBlockBuilder.cpp
+            BasicColumnStoreTupleStorageSubBlock.cpp BloomFilterSubBlock.cpp 
+            ColumnStoreUtil.cpp CompressedBlockBuilder.cpp 
             CompressedColumnStoreTupleStorageSubBlock.cpp
             CompressedPackedRowStoreTupleStorageSubBlock.cpp
             CompressedTupleStorageSubBlock.cpp CSBTreeIndexSubBlock.cpp
