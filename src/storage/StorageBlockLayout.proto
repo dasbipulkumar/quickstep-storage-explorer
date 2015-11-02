@@ -110,11 +110,12 @@ message StorageBlockHeader {
   // efficient coding, we use fixed64 so that the exact size of a header can be
   // known before the sub-block sizes are computed.
   required fixed64 tuple_store_size = 2;
-  repeated fixed64 index_size = 3 [packed=true];
+  optional fixed64 bloom_filter_size = 3;
+  repeated fixed64 index_size = 4 [packed=true];
 
   // Whether each IndexSubBlock is in a consistent state (i.e. completely and
   // accurately reflects the contents of the TupleStorageSubBlock).
-  repeated bool index_consistent = 4 [packed=true];
+  repeated bool index_consistent = 5 [packed=true];
 }
 
 

@@ -110,17 +110,40 @@ class BloomFilterSubBlock {
 
 class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
  public:
-  DefaultBloomFilterSubBlock(const TupleStorageSubBlock &tuple_store,
-	                       const BloomFilterSubBlockDescription &description,
-	                       const bool new_block,
-	                       void *sub_block_memory,
-	                       const std::size_t sub_block_memory_size);
+  DefaultBloomFilterSubBlock(
+		  const TupleStorageSubBlock &tuple_store,
+	      const BloomFilterSubBlockDescription &description,
+		  const bool new_block,
+		  void *sub_block_memory,
+		  const std::size_t sub_block_memory_size)
+ 	 	  : BloomFilterSubBlock(tuple_store,
+ 	 			  	  	  	  	description,
+								new_block,
+								sub_block_memory,
+								sub_block_memory_size) {} ;
 
   ~DefaultBloomFilterSubBlock() {
   }
 
-  BloomFilterSubBlockType getBloomFilterSubBlockType() {
+  BloomFilterSubBlockType getBloomFilterSubBlockType() const {
 	  return kDefault;
+  }
+
+  static std::size_t EstimateBytesForTuples(const CatalogRelation &relation,
+                                             const TupleStorageSubBlockDescription &description) {
+	  return 64; // TODO: remove this magic number, and find a proper place to initialize this
+  }
+
+  bool rebuild() {
+	  return true;
+  }
+
+  bool addEntry(const tuple_id tuple) {
+	  return false;
+  }
+
+  bool getMatchesForPredicate(const Predicate &predicate) const {
+	  return false;
   }
 
 

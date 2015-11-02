@@ -29,6 +29,7 @@
 #include "storage/StorageBlockInfo.hpp"
 #include "storage/StorageBlockLayout.pb.h"
 #include "storage/TupleStorageSubBlock.hpp"
+#include "storage/BloomFilterSubBlock.hpp"
 #include "types/AllowedTypeConversion.hpp"
 #include "types/Tuple.hpp"
 #include "utility/ContainerCompat.hpp"
@@ -331,6 +332,14 @@ class StorageBlock {
       void *sub_block_memory,
       const std::size_t sub_block_memory_size);
 
+  static BloomFilterSubBlock* CreateBloomFilterSubBlock(
+        const TupleStorageSubBlock &tuple_store,
+        const BloomFilterSubBlockDescription &description,
+        const bool new_block,
+        void *sub_block_memory,
+        const std::size_t sub_block_memory_size);
+
+
   // Attempt to add an entry for 'new_tuple' to all of the IndexSubBlocks in
   // this StorageBlock. Returns true if entries were successfully added, false
   // otherwise. Removes 'new_tuple' from the TupleStorageSubBlock if entries
@@ -362,6 +371,7 @@ class StorageBlock {
 
   ScopedPtr<TupleStorageSubBlock> tuple_store_;
   PtrVector<IndexSubBlock> indices_;
+  ScopedPtr<BloomFilterSubBlock> bloom_filter_;
 
   bool ad_hoc_insert_supported_;
   bool ad_hoc_insert_efficient_;

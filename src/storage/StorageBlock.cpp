@@ -162,7 +162,14 @@ StorageBlock::StorageBlock(const CatalogRelation &relation,
   }
 
   if (block_header_.layout().bloom_filter_description().IsInitialized()) {
-	 // create a bloom filter, if "use_bloom_filter" was set to true
+	  // create a bloom filter, if "use_bloom_filter" was set to true
+	  bloom_filter_.reset(CreateBloomFilterSubBlock(
+	        *tuple_store_,
+	        block_header_.layout().bloom_filter_description(),
+	        new_block,
+	        sub_block_address,
+	        block_header_.bloom_filter_size()));
+	  sub_block_address += block_header_.bloom_filter_size();
   }
 }
 
@@ -353,6 +360,29 @@ IndexSubBlock* StorageBlock::CreateIndexSubBlock(
         throw MalformedBlock();
       }
   }
+}
+
+BloomFilterSubBlock* StorageBlock::CreateBloomFilterSubBlock(
+		const TupleStorageSubBlock &tuple_store,
+        const BloomFilterSubBlockDescription &description,
+        const bool new_block,
+        void *sub_block_memory,
+        const std::size_t sub_block_memory_size) {
+	DEBUG_ASSERT(description.IsInitialized());
+	switch (description.sub_block_type()) {
+		case BloomFilterSubBlockDescription::DEFAULT:
+			return new DefaultBloomFilterSubBlock(tuple_store,
+												  description,
+												  new_block,
+												  sub_block_memory,
+												  sub_block_memory_size);
+		default:
+			if (new_block) {
+				FATAL_ERROR("A StorageBlockLayout provided an unknown BloomFilterBlockType.");
+			} else {
+				throw MalformedBlock();
+			}
+	}
 }
 
 bool StorageBlock::insertEntryInIndexes(const tuple_id new_tuple) {

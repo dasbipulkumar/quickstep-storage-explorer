@@ -30,6 +30,7 @@
 #include "storage/CompressedPackedRowStoreTupleStorageSubBlock.hpp"
 #include "storage/CSBTreeIndexSubBlock.hpp"
 #include "storage/PackedRowStoreTupleStorageSubBlock.hpp"
+#include "storage/BloomFilterSubBlock.hpp"
 #include "storage/StorageBlockLayout.pb.h"
 #include "storage/StorageConstants.hpp"
 #include "storage/StorageErrors.hpp"
@@ -54,6 +55,7 @@ void StorageBlockLayout::finalize() {
   // Temporarily set all sub-block sizes to zero, and set all indices as
   // consistent.
   block_header_.set_tuple_store_size(0);
+  block_header_.set_bloom_filter_size(0);
   for (int index_num = 0;
        index_num < layout_description_.index_description_size();
        ++index_num) {
@@ -130,6 +132,23 @@ void StorageBlockLayout::finalize() {
     size_t index_size = (sub_block_space * index_size_factors[index_num]) / total_size_factor;
     block_header_.set_index_size(index_num, index_size);
     allocated_sub_block_space += index_size;
+  }
+
+  // check if we need to allocate for bloom filters, as well
+  if (layout_description_.has_bloom_filter_description()) {
+	  size_t bloom_filter_size = 0;
+	  const BloomFilterSubBlockDescription &bloom_filter_description =
+			  layout_description_.bloom_filter_description();
+	  switch (bloom_filter_description.sub_block_type()) {
+	  	  case BloomFilterSubBlockDescription::DEFAULT:
+	  		  bloom_filter_size =
+	  				  DefaultBloomFilterSubBlock::EstimateBytesForTuples(relation_, tuple_store_description);
+	  		  break;
+	  	  default:
+	  		  break;
+	  }
+	  block_header_.set_bloom_filter_size(bloom_filter_size);
+	  allocated_sub_block_space += bloom_filter_size;
   }
 
   block_header_.set_tuple_store_size(sub_block_space - allocated_sub_block_space);
