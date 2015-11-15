@@ -116,6 +116,7 @@ class QueryExecutor {
   TupleIdSequence* evaluatePredicateOnTupleStore(const TupleStorageSubBlock &tuple_store) const;
   TupleIdSequence* evaluatePredicateWithIndex(const IndexSubBlock &index,
                                               const TupleStorageSubBlock &tuple_store) const;
+  TupleIdSequence* evaluatePredicateOnBlock(const StorageBlock &block) const;
 
   const CatalogRelation &relation_;
   const Predicate &predicate_;

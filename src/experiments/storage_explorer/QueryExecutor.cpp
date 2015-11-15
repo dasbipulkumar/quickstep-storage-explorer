@@ -78,8 +78,8 @@ class BlockBasedPredicateEvaluationThread : public Thread {
           matches->sort();
         }
       } else {
-        ScopedPtr<TupleIdSequence> matches(parent_executor_->evaluatePredicateOnTupleStore(
-            parent_executor_->storage_manager_->getBlock(current_block_id).getTupleStorageSubBlock()));
+        ScopedPtr<TupleIdSequence> matches(parent_executor_->evaluatePredicateOnBlock(
+                    parent_executor_->storage_manager_->getBlock(current_block_id)));
       }
 
       current_block_id = parent_executor_->getNextInputBlock();
@@ -120,7 +120,7 @@ class BlockBasedSelectionThread : public Thread {
           matches->sort();
         }
       } else {
-        matches.reset(parent_executor_->evaluatePredicateOnTupleStore(block.getTupleStorageSubBlock()));
+        matches.reset(parent_executor_->evaluatePredicateOnBlock(block));
       }
 
       parent_executor_->doProjection(block, matches.get());
@@ -257,6 +257,17 @@ TupleIdSequence* QueryExecutor::evaluatePredicateWithIndex(const IndexSubBlock &
         IndexSearchResult result = index.getMatchesForPredicate(predicate_);
         return result.sequence;
       }
+  }
+}
+
+TupleIdSequence* QueryExecutor::evaluatePredicateOnBlock(const StorageBlock &block) const {
+  switch (predicate_.getPredicateType()) {
+    case Predicate::kTrue:
+      return block.getTupleStorageSubBlock().getMatchesForPredicate(NULL);
+    case Predicate::kFalse:
+      return new TupleIdSequence();
+    default:
+      return block.getMatchesForPredicate(&predicate_);
   }
 }
 
