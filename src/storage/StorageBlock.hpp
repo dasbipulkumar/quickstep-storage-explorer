@@ -317,6 +317,8 @@ class StorageBlock {
     return rebuildIndexes(false);
   }
 
+  TupleIdSequence* getMatchesForPredicate(const Predicate *predicate) const;
+
  private:
   static TupleStorageSubBlock* CreateTupleStorageSubBlock(
       const CatalogRelation &relation,
@@ -353,8 +355,6 @@ class StorageBlock {
   // rebuild, without rebuilding any subsequent IndexSubBlocks or updating this
   // StorageBlock's header.
   bool rebuildIndexes(bool short_circuit);
-
-  TupleIdSequence* getMatchesForPredicate(const Predicate *predicate) const;
 
   void updateHeader();
   void invalidateAllIndexes();

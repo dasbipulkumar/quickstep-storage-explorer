@@ -487,6 +487,15 @@ bool StorageBlock::rebuildIndexes(bool short_circuit) {
 
 TupleIdSequence* StorageBlock::getMatchesForPredicate(const Predicate *predicate) const {
   // TODO(chasseur): Use indexes where possible.
+
+  // check to see if bloom filters can allow us to skip this block altogether
+  if (!bloom_filter_.empty()) {
+	  bool hasMatchingTuples = bloom_filter_->getMatchesForPredicate(predicate);
+	  if (!hasMatchingTuples) { // implies that this block can be skipped
+		  TupleIdSequence *matches = new TupleIdSequence();
+		  return matches; // return an empty matches
+	  }
+  }
   return tuple_store_->getMatchesForPredicate(predicate);
 }
 

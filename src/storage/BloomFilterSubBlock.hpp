@@ -87,7 +87,7 @@ class BloomFilterSubBlock {
    * @param predicate The predicate to match.
    * @return a bool which indicates whether the predicate matched or not
    **/
-  virtual bool getMatchesForPredicate(const Predicate &predicate) const = 0;
+  virtual bool getMatchesForPredicate(const Predicate *predicate) const = 0;
 
   /**
    * @brief Rebuild this bloom filter from scratch.
@@ -144,8 +144,9 @@ class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
 	  return true;
   }
 
-  bool getMatchesForPredicate(const Predicate &predicate) const {
-	  return false;
+  bool getMatchesForPredicate(const Predicate *predicate) const {
+	  bool flipCoin = ((rand() % RAND_MAX) % 2) == 0 ? true : false;
+	  return flipCoin;
   }
 
 
