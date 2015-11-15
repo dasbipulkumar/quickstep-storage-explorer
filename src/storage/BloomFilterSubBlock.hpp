@@ -44,16 +44,17 @@ class BloomFilterSubBlock {
    * @exception BlockMemoryTooSmall This TupleStorageSubBlock hasn't been
    *            provided enough memory to store metadata.
    **/
-  BloomFilterSubBlock(const TupleStorageSubBlock &tuple_store,
+  BloomFilterSubBlock(const CatalogRelation &relation,
+		        const TupleStorageSubBlock &tuple_store,
                 const BloomFilterSubBlockDescription &description,
                 const bool new_block,
                 void *sub_block_memory,
                 const std::size_t sub_block_memory_size)
-                : sub_block_memory_(sub_block_memory),
-                  sub_block_memory_size_(sub_block_memory_size),
-                  relation_(tuple_store.getRelation()),
-                  description_(description),
-                  tuple_store_(tuple_store) {
+                : relation_(relation),
+				  tuple_store_(tuple_store),
+				  description_(description),
+				  sub_block_memory_(sub_block_memory),
+				  sub_block_memory_size_(sub_block_memory_size) {
   }
 
   /**
@@ -77,7 +78,7 @@ class BloomFilterSubBlock {
    * @param tuple The ID of the tuple to add.
    * @return True if entry was successfully added, false if not
    **/
-  virtual bool addEntry(const tuple_id tuple) = 0;
+  virtual bool addEntry(const Tuple &tuple) = 0;
 
   /**
    * @brief Use this bloom filter to check (possibly a superset of) tuples matching a
@@ -96,12 +97,11 @@ class BloomFilterSubBlock {
   virtual bool rebuild() = 0;
 
  protected:
+  const CatalogRelation &relation_;
+  const TupleStorageSubBlock &tuple_store_;
+  const BloomFilterSubBlockDescription &description_;
   void *sub_block_memory_;
   const std::size_t sub_block_memory_size_;
-
-  const CatalogRelation &relation_;
-  const BloomFilterSubBlockDescription &description_;
-  const TupleStorageSubBlock &tuple_store_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(BloomFilterSubBlock);
@@ -111,12 +111,14 @@ class BloomFilterSubBlock {
 class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
  public:
   DefaultBloomFilterSubBlock(
+		  const CatalogRelation &relation,
 		  const TupleStorageSubBlock &tuple_store,
 	      const BloomFilterSubBlockDescription &description,
 		  const bool new_block,
 		  void *sub_block_memory,
 		  const std::size_t sub_block_memory_size)
- 	 	  : BloomFilterSubBlock(tuple_store,
+ 	 	  : BloomFilterSubBlock(relation,
+ 	 			  	  	  	  	tuple_store,
  	 			  	  	  	  	description,
 								new_block,
 								sub_block_memory,
@@ -138,8 +140,8 @@ class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
 	  return true;
   }
 
-  bool addEntry(const tuple_id tuple) {
-	  return false;
+  bool addEntry(const Tuple &tuple) {
+	  return true;
   }
 
   bool getMatchesForPredicate(const Predicate &predicate) const {

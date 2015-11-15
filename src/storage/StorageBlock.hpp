@@ -333,11 +333,12 @@ class StorageBlock {
       const std::size_t sub_block_memory_size);
 
   static BloomFilterSubBlock* CreateBloomFilterSubBlock(
-        const TupleStorageSubBlock &tuple_store,
-        const BloomFilterSubBlockDescription &description,
-        const bool new_block,
-        void *sub_block_memory,
-        const std::size_t sub_block_memory_size);
+	  const CatalogRelation &relation,
+      const TupleStorageSubBlock &tuple_store,
+      const BloomFilterSubBlockDescription &description,
+      const bool new_block,
+      void *sub_block_memory,
+      const std::size_t sub_block_memory_size);
 
 
   // Attempt to add an entry for 'new_tuple' to all of the IndexSubBlocks in

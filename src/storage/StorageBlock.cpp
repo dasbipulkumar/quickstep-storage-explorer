@@ -164,6 +164,7 @@ StorageBlock::StorageBlock(const CatalogRelation &relation,
   if (block_header_.layout().bloom_filter_description().IsInitialized()) {
 	  // create a bloom filter, if "use_bloom_filter" was set to true
 	  bloom_filter_.reset(CreateBloomFilterSubBlock(
+			relation_,
 	        *tuple_store_,
 	        block_header_.layout().bloom_filter_description(),
 	        new_block,
@@ -208,6 +209,10 @@ bool StorageBlock::insertTuple(const Tuple &tuple, const AllowedTypeConversion a
 
   if (update_succeeded) {
     dirty_ = true;
+    // add an entry for this tuple in the Bloom Filter sub-block, if initialized
+    if (!bloom_filter_.empty()) {
+    	bloom_filter_->addEntry(tuple);
+    }
     return true;
   } else {
     if (empty_before) {
@@ -221,6 +226,10 @@ bool StorageBlock::insertTuple(const Tuple &tuple, const AllowedTypeConversion a
 bool StorageBlock::insertTupleInBatch(const Tuple &tuple, const AllowedTypeConversion atc) {
   if (tuple_store_->insertTupleInBatch(tuple, atc)) {
     invalidateAllIndexes();
+    // add an entry for this tuple in the Bloom Filter sub-block, if initialized
+    if (!bloom_filter_.empty()) {
+    	bloom_filter_->addEntry(tuple);
+    }
     return true;
   } else {
     if (tuple_store_->isEmpty()) {
@@ -363,6 +372,7 @@ IndexSubBlock* StorageBlock::CreateIndexSubBlock(
 }
 
 BloomFilterSubBlock* StorageBlock::CreateBloomFilterSubBlock(
+		const CatalogRelation &relation,
 		const TupleStorageSubBlock &tuple_store,
         const BloomFilterSubBlockDescription &description,
         const bool new_block,
@@ -371,7 +381,8 @@ BloomFilterSubBlock* StorageBlock::CreateBloomFilterSubBlock(
 	DEBUG_ASSERT(description.IsInitialized());
 	switch (description.sub_block_type()) {
 		case BloomFilterSubBlockDescription::DEFAULT:
-			return new DefaultBloomFilterSubBlock(tuple_store,
+			return new DefaultBloomFilterSubBlock(relation,
+												  tuple_store,
 												  description,
 												  new_block,
 												  sub_block_memory,
