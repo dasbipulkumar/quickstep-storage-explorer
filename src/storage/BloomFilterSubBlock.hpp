@@ -7,10 +7,15 @@
 
 #include <cstddef>
 
+#include "catalog/CatalogRelation.hpp"
 #include "catalog/CatalogTypedefs.hpp"
+#include "expressions/Predicate.hpp"
+#include "expressions/ComparisonPredicate.hpp"
 #include "storage/StorageBlockInfo.hpp"
 #include "storage/TupleStorageSubBlock.hpp"
+#include "types/Tuple.hpp"
 #include "utility/Macros.hpp"
+#include "utility/BloomFilter.hpp"
 
 namespace quickstep {
 
@@ -122,9 +127,43 @@ class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
  	 			  	  	  	  	description,
 								new_block,
 								sub_block_memory,
-								sub_block_memory_size) {} ;
+								sub_block_memory_size) {
+
+	  // initialize the bloom filters and store them in the sub_block_memory
+	  bloom_filter_params_.reset(new BloomParameters());
+	  bloom_filter_params_->compute_optimal_parameters();
+
+	  // number of bytes taken by bloom filter per attribute
+	  bloom_filter_size_ = bloom_filter_params_->optimal_parameters.table_size / bits_per_char;
+
+
+	  CatalogRelation::const_iterator attr_it;
+	  void* bloom_filter_addr = sub_block_memory_;
+	  bloom_filter_data_.reset(static_cast<unsigned char*>(bloom_filter_addr));
+
+	  // allocate space for bloom_filter_data_
+	  for (attr_it = relation.begin(); attr_it != relation.end(); ++attr_it) {
+		  bloom_filter_addr = (static_cast<unsigned char*>(bloom_filter_addr) + bloom_filter_size_);
+	  }
+
+
+	  // allocate space for bloom_filters_
+	  bloom_filters_.reset(static_cast<BloomFilter*>(bloom_filter_addr));
+	  unsigned int i = 0;
+	  for (attr_it = relation.begin(); attr_it != relation.end(); ++attr_it, ++i) {
+		  ScopedPtr<BloomFilter> bloomFilter(new BloomFilter(*bloom_filter_params_, bloom_filter_data_.get() + i*bloom_filter_size_
+															  ));
+		  memcpy(bloom_filter_addr, bloomFilter.get(), sizeof(*bloomFilter));
+		  bloom_filter_addr = (static_cast<char*>(bloom_filter_addr) + sizeof(BloomFilter));
+	  }
+
+  } ;
 
   ~DefaultBloomFilterSubBlock() {
+	  // bloom_filters_ and bloom_filter_data_ were stored inside sub_memory_block_
+	  // hence they will be freed by the StorageBlock
+	  bloom_filters_.release();
+	  bloom_filter_data_.release();
   }
 
   BloomFilterSubBlockType getBloomFilterSubBlockType() const {
@@ -133,7 +172,22 @@ class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
 
   static std::size_t EstimateBytesForTuples(const CatalogRelation &relation,
                                              const TupleStorageSubBlockDescription &description) {
-	  return 64; // TODO: remove this magic number, and find a proper place to initialize this
+
+	  // initialize bloom filter parameters object
+	  ScopedPtr<BloomParameters> bloom_filter_params;
+	  bloom_filter_params.reset(new BloomParameters());
+	  bloom_filter_params->compute_optimal_parameters();
+
+	  // number of bytes taken by bloom filter per attribute
+	  std::size_t bloom_filter_size = bloom_filter_params->optimal_parameters.table_size / bits_per_char;
+
+	  size_t total_size = 0;
+	  size_t size_per_attribute = bloom_filter_size + sizeof(BloomFilter);
+	  CatalogRelation::const_iterator attr_it;
+	  for (attr_it = relation.begin(); attr_it != relation.end(); ++attr_it) {
+		  total_size += size_per_attribute;
+	  }
+	  return total_size;
   }
 
   bool rebuild() {
@@ -141,14 +195,55 @@ class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
   }
 
   bool addEntry(const Tuple &tuple) {
+	  Tuple::const_iterator attr_it;
+	  int bloom_filter_id = 0;
+	  for (attr_it = tuple.begin(); attr_it != tuple.end(); ++attr_it, ++bloom_filter_id) {
+		  if (!attr_it->isNull()) {
+			  ScopedPtr<char> attr_data_ptr(new char[attr_it->getInstanceByteLength()]);
+			  attr_it->copyInto(static_cast<void*>(attr_data_ptr.get()));
+			  bloom_filters_.get()[bloom_filter_id].insert(attr_data_ptr.get(),
+					  	  	  	  	  	  	  	  	 attr_it->getInstanceByteLength());
+		  }
+	  }
 	  return true;
   }
 
   bool getMatchesForPredicate(const Predicate *predicate) const {
-	  bool flipCoin = ((rand() % RAND_MAX) % 2) == 0 ? true : false;
-	  return flipCoin;
+	  if (predicate->getPredicateType() == predicate->kComparison) {
+
+		  ScopedPtr<Predicate> predicate_ptr(predicate->clone());
+		  ComparisonPredicate *comparison_predicate =
+				  static_cast<ComparisonPredicate*>(predicate_ptr.get());
+
+		  if (comparison_predicate->getComparison().getComparisonID()
+				  == comparison_predicate->getComparison().kEqual
+				       && comparison_predicate->getRightOperand().hasStaticValue()) {
+
+			  ScopedPtr<Scalar> left_operand_ptr(comparison_predicate->getLeftOperand().clone());
+			  ScopedPtr<Scalar> right_operand_ptr(comparison_predicate->getRightOperand().clone());
+			  ScalarAttribute *attr = static_cast<ScalarAttribute*>(left_operand_ptr.get());
+			  ScalarLiteral *literal = static_cast<ScalarLiteral*>(right_operand_ptr.get());
+			  int attr_id = attr->getAttribute().getID();
+
+			  ScopedPtr<char> attr_data_ptr(new char[literal->getStaticValue().getInstanceByteLength()]);
+			  literal->getStaticValue().copyInto(static_cast<void*>(attr_data_ptr.get()));
+
+			  bool isContained = bloom_filters_.get()[attr_id].contains(attr_data_ptr.get(),
+					                literal->getStaticValue().getInstanceByteLength());
+
+			  return isContained;
+		  }
+	  }
+
+	  return true; // default
   }
 
+ protected:
+
+  ScopedPtr<BloomFilter> bloom_filters_;
+  ScopedPtr<BloomParameters> bloom_filter_params_;
+  ScopedPtr<unsigned char> bloom_filter_data_;
+  std::size_t bloom_filter_size_;		// number of bytes taken by bloom filter per attribute
 
 };
 
