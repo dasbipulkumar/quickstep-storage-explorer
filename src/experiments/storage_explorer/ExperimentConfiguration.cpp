@@ -329,9 +329,9 @@ void ExperimentConfiguration::logConfiguration(std::ostream *output) const {
     *output << "    Compression Not Enabled\n";
   }
   if (use_bloom_filter_) {
-	*output << "    Compression Enabled\n";
+	*output << "    Bloom Filter Enabled\n";
   } else {
-	*output << "    Compression Not Enabled\n";
+	*output << "    Bloom Filter Not Enabled\n";
   }
 
   *output << "Test Parameters:\n";

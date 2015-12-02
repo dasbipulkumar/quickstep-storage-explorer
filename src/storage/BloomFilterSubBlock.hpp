@@ -130,8 +130,7 @@ class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
 								sub_block_memory_size) {
 
 	  // initialize the bloom filters and store them in the sub_block_memory
-	  bloom_filter_params_.reset(new BloomParameters());
-	  bloom_filter_params_->compute_optimal_parameters();
+	  bloom_filter_params_.reset(getBloomFilterConfig());
 
 	  // number of bytes taken by bloom filter per attribute
 	  bloom_filter_size_ = bloom_filter_params_->optimal_parameters.table_size / bits_per_char;
@@ -175,8 +174,7 @@ class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
 
 	  // initialize bloom filter parameters object
 	  ScopedPtr<BloomParameters> bloom_filter_params;
-	  bloom_filter_params.reset(new BloomParameters());
-	  bloom_filter_params->compute_optimal_parameters();
+	  bloom_filter_params.reset(getBloomFilterConfig());
 
 	  // number of bytes taken by bloom filter per attribute
 	  std::size_t bloom_filter_size = bloom_filter_params->optimal_parameters.table_size / bits_per_char;
@@ -236,6 +234,19 @@ class DefaultBloomFilterSubBlock : public BloomFilterSubBlock {
 	  }
 
 	  return true; // default
+  }
+
+  // configure Default bloom filter
+  static BloomParameters* getBloomFilterConfig() {
+	  ScopedPtr<BloomParameters> bloomParams(new BloomParameters());
+	  bloomParams->minimum_number_of_hashes = 10;
+	  bloomParams->maximum_number_of_hashes = 20;
+	  bloomParams->minimum_size = 8000;
+	  bloomParams->maximum_size = 8000000;
+	  bloomParams->projected_element_count = 1000000;
+	  bloomParams->false_positive_probability = 0.01;
+	  bloomParams->compute_optimal_parameters();
+	  return bloomParams.release();
   }
 
  protected:
